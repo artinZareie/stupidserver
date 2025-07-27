@@ -1,12 +1,15 @@
 BUILD_DIR := build/
 BUILD_FLAGS := 
-FORMAT_STYLE := GNU
+FORMAT_STYLE := Microsoft
 
 SOURCE_FILES := main.c $(wildcard src/*.c) $(wildcard src/*.h)
 
 .PHONY: all compile generate clean format
 
 all: clean generate
+
+run: compile
+	@$(BUILD_DIR)/stupidserver
 
 compile: generate
 	@echo "--- Compiling Sources ---"
