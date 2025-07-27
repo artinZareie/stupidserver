@@ -1,6 +1,7 @@
 #include "src/helpers.h"
 #include <asm-generic/socket.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -177,6 +178,8 @@ void multiproc_event_loop(server_t server)
 
 int main(int argc, char *argv[])
 {
+    signal(SIGCHLD, SIG_IGN);
+
     server_t server = create_server(8585);
     multiproc_event_loop(server);
 

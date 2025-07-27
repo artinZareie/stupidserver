@@ -1,0 +1,14 @@
+[
+{
+  "directory": "/home/aritn/Projects/stupidserver/build",
+  "command": "/usr/bin/cc    -o CMakeFiles/stupidserver.dir/main.c.o -c /home/aritn/Projects/stupidserver/main.c",
+  "file": "/home/aritn/Projects/stupidserver/main.c",
+  "output": "CMakeFiles/stupidserver.dir/main.c.o"
+},
+{
+  "directory": "/home/aritn/Projects/stupidserver/build",
+  "command": "/usr/bin/cc    -o CMakeFiles/stupidserver.dir/src/helpers.c.o -c /home/aritn/Projects/stupidserver/src/helpers.c",
+  "file": "/home/aritn/Projects/stupidserver/src/helpers.c",
+  "output": "CMakeFiles/stupidserver.dir/src/helpers.c.o"
+}
+]
