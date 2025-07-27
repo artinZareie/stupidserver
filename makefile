@@ -18,6 +18,7 @@ compile: generate
 generate:
 	mkdir -p $(BUILD_DIR)
 	cmake -S . -B $(BUILD_DIR)
+	@cp $(BUILD_DIR)/compile_commands.json ./compile_commands.json
 
 format:
 	clang-format -i -style=$(FORMAT_STYLE) $(ALL_SOURCE_FILES)
