@@ -8,6 +8,7 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/socket.h>
+#include <time.h>
 #include <unistd.h>
 
 #define _DEBUG_MODE
@@ -73,10 +74,22 @@ void handle_connection(int client_socket)
     char buffer[BUFF_SIZE] = {0};
     ssize_t bytes_read = read(client_socket, buffer, BUFF_SIZE - 1);
 
+    sleep(10); // To test the blocking `accept`.
+
     if (bytes_read > 0)
     {
         printf("Received: %.*s\n", (int)bytes_read, buffer);
-        const char *body = "Gotcha.";
+
+        time_t current_time_raw;
+        struct tm *local_time_info;
+
+        time(&current_time_raw);
+        local_time_info = localtime(&current_time_raw);
+
+        char body[1024];
+        snprintf(body, sizeof(body), "Time is: %d:%d:%d", local_time_info->tm_hour, local_time_info->tm_min,
+                 local_time_info->tm_sec);
+
         char response[1024];
         snprintf(response, sizeof(response),
                  "HTTP/1.1 200 OK\r\n"
