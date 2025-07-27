@@ -8,6 +8,7 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -131,10 +132,53 @@ void simple_event_loop(server_t server)
     free(server.addrlen);
 }
 
+void multiproc_event_loop(server_t server)
+{
+    int req_socket;
+    char *buffer = (char *)malloc(sizeof(char) * BUFF_SIZE);
+
+    while (true)
+    {
+        if ((req_socket = accept(server.server_fd, (struct sockaddr *)server.addr_ptr, (socklen_t *)server.addrlen)) <
+            0)
+        {
+            leave("Couldn't handle incoming request.");
+        }
+
+        pid_t pid = fork();
+
+        if (pid < 0)
+        {
+            perror("fork");
+            close(req_socket);
+            continue;
+        }
+
+        if (pid == 0)
+        {
+            close(server.server_fd);
+            handle_connection(req_socket);
+            exit(0);
+        }
+        else
+        {
+            close(req_socket);
+        }
+
+#ifdef _DEBUG_MODE
+        printf("Handling incoming request.\n");
+#endif
+    }
+
+    close(server.server_fd);
+    free(server.addr_ptr);
+    free(server.addrlen);
+}
+
 int main(int argc, char *argv[])
 {
     server_t server = create_server(8585);
-    simple_event_loop(server);
+    multiproc_event_loop(server);
 
     return 0;
 }
