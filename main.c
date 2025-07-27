@@ -76,8 +76,17 @@ void handle_connection(int client_socket)
     if (bytes_read > 0)
     {
         printf("Received: %.*s\n", (int)bytes_read, buffer);
-        const char *resp = "HTTP/1.1 200 OK\nContent-Length: 12\n\nGotcha.";
-        send(client_socket, resp, strlen(resp), 0);
+        const char *body = "Gotcha.";
+        char response[1024];
+        snprintf(response, sizeof(response),
+                 "HTTP/1.1 200 OK\r\n"
+                 "Content-Type: text/plain\r\n"
+                 "Content-Length: %zu\r\n"
+                 "Connection: close\r\n"
+                 "\r\n"
+                 "%s",
+                 strlen(body), body);
+        send(client_socket, response, strlen(response), 0);
     }
     close(client_socket);
 }
