@@ -1,6 +1,6 @@
 #include "src/helpers.h"
-#include <asm-generic/socket.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -106,6 +106,17 @@ void handle_connection(int client_socket)
     close(client_socket);
 }
 
+void *threaded_handle_connection(void *socket_desc_ptr)
+{
+    int sock = *(int *)socket_desc_ptr;
+
+    free(socket_desc_ptr);
+
+    handle_connection(sock);
+
+    return NULL;
+}
+
 void simple_event_loop(server_t server)
 {
     int req_socket;
@@ -124,8 +135,6 @@ void simple_event_loop(server_t server)
 #endif
 
         handle_connection(req_socket);
-
-        close(req_socket);
     }
 
     close(server.server_fd);
@@ -176,12 +185,54 @@ void multiproc_event_loop(server_t server)
     free(server.addrlen);
 }
 
+void multithread_event_loop(server_t server)
+{
+    int req_socket;
+    char *buffer = (char *)malloc(sizeof(char) * BUFF_SIZE);
+
+    while (true)
+    {
+        if ((req_socket = accept(server.server_fd, (struct sockaddr *)server.addr_ptr, (socklen_t *)server.addrlen)) <
+            0)
+        {
+            leave("Couldn't handle incoming request.");
+        }
+
+#ifdef _DEBUG_MODE
+        printf("Handling incoming request.\n");
+#endif
+
+        pthread_t thread;
+        int *client_socket_ptr = (int *)malloc(sizeof(int));
+        if (client_socket_ptr == 0)
+        {
+            close(req_socket);
+            continue;
+        }
+
+        *client_socket_ptr = req_socket;
+
+        if (pthread_create(&thread, NULL, threaded_handle_connection, (void *)client_socket_ptr))
+        {
+            perror("pthread_create");
+            free(client_socket_ptr);
+            close(req_socket);
+        }
+
+        pthread_detach(thread);
+    }
+
+    close(server.server_fd);
+    free(server.addr_ptr);
+    free(server.addrlen);
+}
+
 int main(int argc, char *argv[])
 {
     signal(SIGCHLD, SIG_IGN);
 
     server_t server = create_server(8585);
-    multiproc_event_loop(server);
+    multithread_event_loop(server);
 
     return 0;
 }
