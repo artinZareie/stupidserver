@@ -16,6 +16,7 @@
 #define _DEBUG_MODE
 
 #define BUFF_SIZE 16384
+volatile sig_atomic_t keep_running = 1;
 
 typedef struct
 {
@@ -23,6 +24,11 @@ typedef struct
     struct sockaddr_in *addr_ptr;
     int *addrlen;
 } server_t;
+
+void shutdown_handler(int signal)
+{
+    keep_running = 0;
+}
 
 /// Creates a socket that listens on `port`, and returns file descriptor.
 server_t create_server(int port)
@@ -120,9 +126,8 @@ void *threaded_handle_connection(void *socket_desc_ptr)
 void simple_event_loop(server_t server)
 {
     int req_socket;
-    char *buffer = (char *)malloc(sizeof(char) * BUFF_SIZE);
 
-    while (true)
+    while (keep_running)
     {
         if ((req_socket = accept(server.server_fd, (struct sockaddr *)server.addr_ptr, (socklen_t *)server.addrlen)) <
             0)
@@ -145,9 +150,8 @@ void simple_event_loop(server_t server)
 void multiproc_event_loop(server_t server)
 {
     int req_socket;
-    char *buffer = (char *)malloc(sizeof(char) * BUFF_SIZE);
 
-    while (true)
+    while (keep_running)
     {
         if ((req_socket = accept(server.server_fd, (struct sockaddr *)server.addr_ptr, (socklen_t *)server.addrlen)) <
             0)
@@ -188,9 +192,8 @@ void multiproc_event_loop(server_t server)
 void multithread_event_loop(server_t server)
 {
     int req_socket;
-    char *buffer = (char *)malloc(sizeof(char) * BUFF_SIZE);
 
-    while (true)
+    while (keep_running)
     {
         if ((req_socket = accept(server.server_fd, (struct sockaddr *)server.addr_ptr, (socklen_t *)server.addrlen)) <
             0)
@@ -230,6 +233,7 @@ void multithread_event_loop(server_t server)
 int main(int argc, char *argv[])
 {
     signal(SIGCHLD, SIG_IGN);
+    signal(SIGINT, shutdown_handler);
 
     server_t server = create_server(8585);
     multithread_event_loop(server);
